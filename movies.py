@@ -1,438 +1,331 @@
-# the content of the movie database is taken from the textbook Concrete Abstractions: An
-# Introduction to Computer Science Using Scheme, by Max Hailperin, Barbara Kaiser, and
-# Karl Knight, Copyright (c) 1998 by the authors. Full text is available for free at
-# http://www.gustavus.edu/+max/concrete-abstractions.html
+# Important variables:
+#     movie_db: list of 4-tuples (imported from movies.py)
+#     pa_list: list of pattern-action pairs (queries)
+#       pattern - strings with % and _ (not consecutive)
+#       action  - return list of strings
 
-# the Scheme file, Revision 1.3 as of 2005/12/20 14:09:37, has been reformated for
-# Python. The original file is available as
-# http://www.gustavus.edu/academics/mcs/max/concabs/code/movie.scm
+# THINGS TO ASK THE MOVIE CHAT BOT:
+# what movies were made in _ (must be date, because we don't have location)
+# what movies were made between _ and _
+# what movies were made before _
+# what movies were made after _
+# who directed %
+# who was the director of %
+# what movies were directed by %
+# who acted in %
+# when was % made
+# in what movies did % appear
+# bye
 
-# list of tuples w/ following format (the first tuple in the list is also annotated):
-# each tuple contains title, director, year and actors/actresses
-# `[(title, director, year, [actress_one, actor_two, ...]), ...]`
-from typing import List, Tuple
+#  Include the movie database, named movie_db
+from movies import movie_db
+from match import match
+from typing import List, Tuple, Callable, Any
 
-movie_db: List[Tuple[str, str, int, List[str]]] = [
-    (
-        "amarcord",  # title
-        "federico fellini",  # director
-        1974,  # year
-        [
-            "magali noel",
-            "bruno zanin",
-            "pupella maggio",
-            "armando drancia",
-        ],  # actors/actresses
-    ),
-    (
-        "the big easy",
-        "jim mcbride",
-        1987,
-        [
-            "dennis quaid",
-            "ellen barkin",
-            "ned beatty",
-            "lisa jane persky",
-            "john goodman",
-            "charles ludlam",
-        ],
-    ),
-    (
-        "boyz n the hood",
-        "john singleton",
-        1991,
-        [
-            "cuba gooding jr.",
-            "ice cube",
-            "larry fishburne",
-            "tyra ferrell",
-            "morris chestnut",
-        ],
-    ),
-    (
-        "dead again",
-        "kenneth branagh",
-        1991,
-        [
-            "kenneth branagh",
-            "emma thompson",
-            "andy garcia",
-            "derek jacobi",
-            "hanna schygulla",
-        ],
-    ),
-    (
-        "the godfather",
-        "francis ford coppola",
-        1972,
-        ["marlon brando", "al pacino", "james caan", "robert duvall", "diane keaton"],
-    ),
-    (
-        "an american in paris",
-        "vincente minnelli",
-        1952,
-        ["gene kelley", "leslie caron", "oscar levant", "nina foch", "george guetary"],
-    ),
-    (
-        "casablanca",
-        "michael curtiz",
-        1942,
-        [
-            "humphrey bogart",
-            "ingrid bergman",
-            "paul henreid",
-            "claude rains",
-            "sydney greenstreet",
-            "peter lorre",
-            "s z sakall",
-            "conrad veidt",
-            "dooley wilson",
-        ],
-    ),
-    (
-        "citizen kane",
-        "orson welles",
-        1941,
-        [
-            "orson welles",
-            "joseph cotten",
-            "dorothy comingore",
-            "ray collins",
-            "george coulouris",
-            "agnes moorehead",
-            "ruth warrick",
-        ],
-    ),
-    (
-        "gone with the wind",
-        "victor fleming",
-        1939,
-        [
-            "clark gable",
-            "vivien leigh",
-            "leslie howard",
-            "olivia de havilland",
-            "hattie mcdaniel",
-            "butterfly mcqueen",
-        ],
-    ),
-    (
-        "lawrence of arabia",
-        "david lean",
-        1962,
-        [
-            "peter otoole",
-            "alec guinness",
-            "anthony quinn",
-            "jack hawkins",
-            "jose ferrer",
-            "omar sharif",
-            "anthony quayle",
-            "claude rains",
-            "arthur kennedy",
-            "donald wolfit",
-        ],
-    ),
-    (
-        "the manchurian candidate",
-        "john frankenheimer",
-        1962,
-        [
-            "frank sinatra",
-            "laurence harvey",
-            "janet leigh",
-            "angela lansbury",
-            "henry silva",
-            "james gregory",
-            "leslie parrish",
-            "john mcgiver",
-            "khigh dhiegh",
-            "james edwards",
-        ],
-    ),
-    (
-        "metropolis",
-        "fritz lang",
-        1926,
-        [
-            "alfred abel",
-            "gustay frohlich",
-            "brigitte helm",
-            "rudolf kleinrogge",
-            "heinrich george",
-        ],
-    ),
-    (
-        "othello",
-        "orson welles",
-        1952,
-        [
-            "orson welles",
-            "michael mac liammoir",
-            "robert coote",
-            "suzanne cloutier",
-            "faye compton",
-            "doris dowling",
-            "michael laurence",
-        ],
-    ),
-    (
-        "spartacus",
-        "stanley kubrick",
-        1960,
-        [
-            "kirk douglas",
-            "laurence olivier",
-            "jean simmons",
-            "charles laughton",
-            "peter ustinov",
-            "john gavin",
-            "tony curtis",
-            "woody strode",
-        ],
-    ),
-    (
-        "a star is born",
-        "george cuckor",
-        1954,
-        [
-            "judy garland",
-            "james mason",
-            "jack carson",
-            "tommy noonan",
-            "charles bickford",
-        ],
-    ),
-    (
-        "after the rehearsal",
-        "ingmar bergman",
-        1984,
-        ["erland josephson", "ingrid thulin", "lena olin", "nadja palmstjerna-weiss"],
-    ),
-    (
-        "amadeus",
-        "milos forman",
-        1984,
-        [
-            "f murray abraham",
-            "tom hulce",
-            "elizabeth berridge",
-            "simon callow",
-            "roy dotrice",
-            "christine ebersole",
-            "jeffrey jones",
-        ],
-    ),
-    (
-        "blood simple",
-        "joel coen",
-        1985,
-        [
-            "john getz",
-            "frances mcdormand",
-            "dan hedaya",
-            "m emmet walsh",
-            "samm-art williams",
-        ],
-    ),
-    (
-        "chinatown",
-        "roman polanski",
-        1974,
-        [
-            "jack nicholson",
-            "faye dunaway",
-            "john huston",
-            "perry lopez",
-            "john hillerman",
-            "darrell zwerling",
-            "diane ladd",
-            "roman polanski",
-        ],
-    ),
-    (
-        "the cotton club",
-        "francis ford coppola",
-        1984,
-        [
-            "richard gere",
-            "gregory hines",
-            "diane lane",
-            "lonette mckee",
-            "bob hoskins",
-            "james remar",
-            "fred gwynne",
-        ],
-    ),
-    (
-        "the crying game",
-        "neil jordan",
-        1992,
-        [
-            "stephen rea",
-            "jaye davidson",
-            "forest whitaker",
-            "miranda richardson",
-            "adrian dunbar",
-            "breffini mckenna",
-            "joe savino",
-        ],
-    ),
-    (
-        "the day of the jackal",
-        "fred zinnemann",
-        1973,
-        [
-            "edward fox",
-            "terence alexander",
-            "michel auclair",
-            "alan badel",
-            "tony britton",
-            "denis carey",
-            "olga georges-picot",
-            "cyril cusack",
-        ],
-    ),
-    (
-        "diva",
-        "jean-jacques beineix",
-        1981,
-        [
-            "wilhelmenia wiggins fernandez",
-            "frederic andrei",
-            "richard bohringer",
-            "thay an luu",
-            "jacques fabbri",
-            "chantal deruaz",
-        ],
-    ),
-    (
-        "the dresser",
-        "peter yates",
-        1984,
-        ["albert finney", "tom courtenay", "edward fox", "zena walker"],
-    ),
-    (
-        "el norte",
-        "gregory nava",
-        1983,
-        [
-            "zaide silvia gutierrez",
-            "david villalpando",
-            "ernesto gomez cruz",
-            "alicia del lago",
-            "trinidad silva",
-        ],
-    ),
-    (
-        "the exorcist",
-        "william friedkin",
-        1973,
-        [
-            "ellen burstyn",
-            "linda blair",
-            "jason miller",
-            "max von sydow",
-            "kitty winn",
-            "lee j cobb",
-        ],
-    ),
-    (
-        "a fish called wanda",
-        "michael chrichton",
-        1988,
-        [
-            "john cleese",
-            "jamie lee curtis",
-            "kevin kline",
-            "michael palin",
-            "maria aitken",
-            "tom georgeson",
-            "patricia hayes",
-        ],
-    ),
-    (
-        "flirting",
-        "john duigan",
-        1992,
-        [
-            "noah taylor",
-            "thandie newton",
-            "nicole kidman",
-            "bartholomew rose",
-            "felix nobis",
-            "josh picker",
-            "kiri paramore",
-        ],
-    ),
-    ("gates of heaven", "errol morris", 1978, []),
-    (
-        "house of games",
-        "david mamet",
-        1987,
-        [
-            "lindsay crouse",
-            "joe mantegna",
-            "mike nussman",
-            "lilia skala",
-            "j t walsh",
-            "jack wallace",
-        ],
-    ),
-    (
-        "iceman",
-        "fred schepisi",
-        1984,
-        ["timothy hutton", "john lone", "lindsay crouse"],
-    ),
-    (
-        "jaws",
-        "steven spielberg",
-        1975,
+# The projection functions, that give us access to certain parts of a "movie" (a tuple)
+def get_title(movie: Tuple[str, str, int, List[str]]) -> str:
+    return movie[0]
+
+
+def get_director(movie: Tuple[str, str, int, List[str]]) -> str:
+    return movie[1]
+
+
+def get_year(movie: Tuple[str, str, int, List[str]]) -> int:
+    return movie[2]
+
+
+def get_actors(movie: Tuple[str, str, int, List[str]]) -> List[str]:
+    return movie[3]
+
+# print(get_title(movie_db[1]))
+# for movie in movie_db:
+#     print(get_title(movie))
+
+
+# Below are a set of actions. Each takes a list argument and returns a list of answers
+# according to the action and the argument. It is important that each function returns a
+# list of the answer(s) and not just the answer itself.
+
+
+def title_by_year(matches: List[str]) -> List[str]:
+    """Finds all movies made in the passed in year
+
+    Args:
+        matches - a list of 1 string, just the year. Note that this year is passed as a
+            string and should be converted to an int
+
+    Returns:
+        a list of movie titles made in the passed in year
+    """
+    result = []
+    for movie in movie_db:
+        if int(matches[0]) == get_year(movie):
+            result.append(get_title(movie))
+    # print(result)
+    return result
+
+
+def title_by_year_range(matches: List[str]) -> List[str]:
+    """Finds all movies made in the passed in year range
+
+    Args:
+        matches - a list of 2 strings, the year beginning the range and the year ending
+            the range. For example, to get movies from 1991-1994 matches would look like
+            this - ["1991", "1994"] Note that these years are passed as strings and
+            should be converted to ints.
+
+    Returns:
+        a list of movie titles made during those years, inclusive (meaning if you pass
+        in ["1991", "1994"] you will get movies made in 1991, 1992, 1993 & 1994)
+    """
+    result = []
+    for movie in movie_db:
+        if int(matches[0]) <= get_year(movie) <= int(matches[1]):
+            result.append(get_title(movie))
+    # print(result)
+    return result
+
+
+def title_before_year(matches: List[str]) -> List[str]:
+    """Finds all movies made before the passed in year
+
+    Args:
+        matches - a list of 1 string, just the year. Note that this year is passed as a
+            string and should be converted to an int
+
+    Returns:
+        a list of movie titles made before the passed in year, exclusive (meaning if you
+        pass in 1992 you won't get any movies made that year, only before)
+    """
+    result = []
+    for movie in movie_db:
+        if get_year(movie) < int(matches[0]):
+            result.append(get_title(movie))
+    # print(result)
+    return result
+
+
+def title_after_year(matches: List[str]) -> List[str]:
+    """Finds all movies made after the passed in year
+
+    Args:
+        matches - a list of 1 string, just the year. Note that this year is passed as a
+            string and should be converted to an int
+
+    Returns:
+        a list of movie titles made after the passed in year, exclusive (meaning if you
+        pass in 1992 you won't get any movies made that year, only after)
+    """
+    result = []
+    for movie in movie_db:
+        if get_year(movie) > int(matches[0]):
+            result.append(get_title(movie))
+    # print(result)
+    return result
+
+
+def director_by_title(matches: List[str]) -> List[str]:
+    """Finds director of movie based on title
+
+    Args:
+        matches - a list of 1 string, just the title
+
+    Returns:
+        a list of 1 string, the director of the movie
+    """
+    result = []
+    for movie in movie_db:
+        if get_title(movie) == matches[0]:
+            result.append(get_director(movie))
+    # print(result)
+    return result
+
+
+def title_by_director(matches: List[str]) -> List[str]:
+    """Finds movies directed by the passed in director
+
+    Args:
+        matches - a list of 1 string, just the director
+
+    Returns:
+        a list of movies titles directed by the passed in director
+    """
+    result = []
+    for movie in movie_db:
+        if get_director(movie) == matches[0]:
+            result.append(get_title(movie))
+    # print(result)
+    return result
+
+
+def actors_by_title(matches: List[str]) -> List[str]:
+    """Finds actors who acted in the passed in movie title
+
+    Args:
+        matches - a list of 1 string, just the movie title
+
+    Returns:
+        a list of actors who acted in the passed in title
+    """
+    result = []
+    for movie in movie_db:
+        if get_title(movie) == matches[0]:
+            result = get_actors(movie)
+    # print(result)
+    return result
+
+
+def year_by_title(matches: List[str]) -> List[int]:
+    """Finds year of passed in movie title
+
+    Args:
+        matches - a list of 1 string, just the movie title
+
+    Returns:
+        a list of one item (an int), the year that the movie was made
+    """
+    result = []
+    for movie in movie_db:
+        if get_title(movie) == matches[0]:
+            result.append(get_year(movie))
+    # print(result)
+    return result
+
+
+def title_by_actor(matches: List[str]) -> List[str]:
+    """Finds titles of all movies that the given actor was in
+
+    Args:
+        matches - a list of 1 string, just the actor
+
+    Returns:
+        a list of movie titles that the actor acted in
+    """
+    result = []
+    for movie in movie_db:
+        if matches[0] in get_actors(movie):
+            result.append(get_title(movie))
+    # print(result)
+    return result
+
+
+# dummy argument is ignored and doesn't matter
+def bye_action(dummy: List[str]) -> None:
+    raise KeyboardInterrupt
+
+
+# The pattern-action list for the natural language query system A list of tuples of
+# pattern and action It must be declared here, after all of the function definitions
+pa_list: List[Tuple[List[str], Callable[[List[str]], List[Any]]]] = [
+    (str.split("what movies were made in _"), title_by_year),
+    (str.split("what movies were made between _ and _"), title_by_year_range),
+    (str.split("what movies were made before _"), title_before_year),
+    (str.split("what movies were made after _"), title_after_year),
+    # note there are two valid patterns here two different ways to ask for the director
+    # of a movie
+    (str.split("who directed %"), director_by_title),
+    (str.split("who was the director of %"), director_by_title),
+    (str.split("what movies were directed by %"), title_by_director),
+    (str.split("who acted in %"), actors_by_title),
+    (str.split("when was % made"), year_by_title),
+    (str.split("in what movies did % appear"), title_by_actor),
+    (["bye"], bye_action),
+]
+
+
+def search_pa_list(src: List[str]) -> List[str]:
+    """Takes source, finds matching pattern and calls corresponding action. If it finds
+    a match but has no answers it returns ["No answers"]. If it finds no match it
+    returns ["I don't understand"].
+
+    Args:
+        source - a phrase represented as a list of words (strings)
+
+    Returns:
+        a list of answers. Will be ["I don't understand"] if it finds no matches and
+        ["No answers"] if it finds a match but no answers
+    """
+    pass
+
+
+def query_loop() -> None:
+    """The simple query loop. The try/except structure is to catch Ctrl-C or Ctrl-D
+    characters and exit gracefully.
+    """
+    print("Welcome to the movie database!\n")
+    while True:
+        try:
+            print()
+            query = input("Your query? ").replace("?", "").lower().split()
+            answers = search_pa_list(query)
+            for ans in answers:
+                print(ans)
+
+        except (KeyboardInterrupt, EOFError):
+            break
+
+    print("\nSo long!\n")
+
+
+# uncomment the following line once you've written all of your code and are ready to try
+# it out. Before running the following line, you should make sure that your code passes
+# the existing asserts.
+# query_loop()
+
+if __name__ == "__main__":
+    assert isinstance(title_by_year(["1974"]), list), "title_by_year not returning a list"
+    assert isinstance(title_by_year_range(["1970", "1972"]), list), "title_by_year_range not returning a list"
+    assert isinstance(title_before_year(["1950"]), list), "title_before_year not returning a list"
+    assert isinstance(title_after_year(["1990"]), list), "title_after_year not returning a list"
+    assert isinstance(director_by_title(["jaws"]), list), "director_by_title not returning a list"
+    assert isinstance(title_by_director(["steven spielberg"]), list), "title_by_director not returning a list"
+    assert isinstance(actors_by_title(["jaws"]), list), "actors_by_title not returning a list"
+    assert isinstance(year_by_title(["jaws"]), list), "year_by_title not returning a list"
+    # assert isinstance(title_by_actor(["orson welles"]), list), "title_by_actor not returning a list"
+    
+    assert sorted(title_by_year(["1974"])) == sorted(
+        ["amarcord", "chinatown"]
+    ), "failed title_by_year test"
+    assert sorted(title_by_year_range(["1970", "1972"])) == sorted(
+        ["the godfather", "johnny got his gun"]
+    ), "failed title_by_year_range test"
+    assert sorted(title_before_year(["1950"])) == sorted(
+        ["casablanca", "citizen kane", "gone with the wind", "metropolis"]
+    ), "failed title_before_year test"
+    assert sorted(title_after_year(["1990"])) == sorted(
+        ["boyz n the hood", "dead again", "the crying game", "flirting", "malcolm x"]
+    ), "failed title_after_year test"
+    assert sorted(director_by_title(["jaws"])) == sorted(
+        ["steven spielberg"]
+    ), "failed director_by_title test"
+    assert sorted(title_by_director(["steven spielberg"])) == sorted(
+        ["jaws"]
+    ), "failed title_by_director test"
+    assert sorted(actors_by_title(["jaws"])) == sorted(
         [
             "roy scheider",
             "robert shaw",
             "richard dreyfuss",
             "lorraine gary",
             "murray hamilton",
-        ],
-    ),
-    (
-        "johnny got his gun",
-        "dalton trumbo",
-        1971,
-        [
-            "timothy bottoms",
-            "kathy fields",
-            "jason robards",
-            "diane varsi",
-            "donald sutherland",
-            "eduard franz",
-        ],
-    ),
-    (
-        "local hero",
-        "bill forsyth",
-        1983,
-        [
-            "burt lancaster",
-            "peter reigert",
-            "peter capaldi",
-            "fulton mckay",
-            "denis lawson",
-        ],
-    ),
-    (
-        "malcolm x",
-        "spike lee",
-        1992,
-        [
-            "denzel washington",
-            "angela basset",
-            "albert hall",
-            "al freeman jr",
-            "delroy lindo",
-            "spike lee",
-        ],
-    )
-]
+        ]
+    ), "failed actors_by_title test"
+    assert sorted(actors_by_title(["movie not in database"])) == [], "failed actors_by_title not in database test"
+    assert sorted(year_by_title(["jaws"])) == sorted(
+        [1975]
+    ), "failed year_by_title test"
+    assert sorted(title_by_actor(["orson welles"])) == sorted(
+        ["citizen kane", "othello"]
+    ), "failed title_by_actor test"
+    assert sorted(search_pa_list(["hi", "there"])) == sorted(
+        ["I don't understand"]
+    ), "failed search_pa_list test 1"
+    assert sorted(search_pa_list(["who", "directed", "jaws"])) == sorted(
+        ["steven spielberg"]
+    ), "failed search_pa_list test 2"
+    assert sorted(
+        search_pa_list(["what", "movies", "were", "made", "in", "2020"])
+    ) == sorted(["No answers"]), "failed search_pa_list test 3"
+
+    print("All tests passed!") 
