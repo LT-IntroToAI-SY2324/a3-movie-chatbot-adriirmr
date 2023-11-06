@@ -4,11 +4,10 @@ Assignment 3 is all about creating this natural language query system.  In order
 
 ## Reflection Questions
 1. In your own words describe the `search_pa_list` function.
-
+The 'searh_pa_list' function works to identify and sort out the movis in the movie chatbot, just to help organize and match the movies correctly. This is seen in lines 328-336, where these 'search_pa_list' is seen to be used to sort out and organize the movies based on their title or the list that was give to see if the info matches. 
 
 2. What movie did you add to the `movies.py` file?  What year was it made? Any specific reason you added that movie?
-
-
+The movie that i added to the 'movies.py' file is 'titanic', and the year that it was made was 1992. The reason why I added this movie is because there was a section that only had a list of movies made after 1990, and titanic matched this one, so if the user wanted to look for this movie they would look under this section and it would match the info if they look for movies after 1990.
 3. What pattern / action did you add to the paList data structure?  Why do you think that is a useful pattern / action?
 
 
